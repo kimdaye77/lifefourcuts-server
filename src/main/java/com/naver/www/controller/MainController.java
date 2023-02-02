@@ -2,13 +2,8 @@ package com.naver.www.controller;
 
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;    
-import javax.servlet.http.HttpServletResponse;   
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -16,7 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class MainController {
 
     @Autowired
-    KakaoService kakaoService;
+    private KakaoService kakaoService;
+
     // @RequestMapping("test")
     // @ResponseBody
     // public String testConnect() {
@@ -30,7 +26,7 @@ public class MainController {
     }
 
     @RequestMapping("/kakao/sign_out")
-    public void kakaoSignOut(@RequestParam(value = "code") String code) {
-        kakaoService.kakaoLogout(code);
+    public String kakaoSignOut(@RequestParam(value = "accessToken") String code) {
+        return kakaoService.kakaoLogout(code);
     }
 } 

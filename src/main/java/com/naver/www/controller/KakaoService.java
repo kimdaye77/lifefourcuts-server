@@ -18,9 +18,6 @@ import com.google.firebase.auth.UserRecord.UpdateRequest;
 import com.google.gson.JsonElement;    
 import com.google.gson.JsonObject;     
 import com.google.gson.JsonParser;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -59,11 +56,11 @@ public class KakaoService {
 	public String getAccessToken(String authorize_code, String stat) {
 		String access_Token = "";
 		String refresh_Token = "";
-		String reqURL = "https://kauth.kakao.com/oauth/token";
+		final String reqURL = "https://kauth.kakao.com/oauth/token";
 		
 		try {
-			URL url = new URL(reqURL);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			final URL url = new URL(reqURL);
+			final HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 			//POST 요청을 위해 기본값이 false인 setDoOutput을 true로
 			conn.setDoOutput(true);
 			conn.setRequestMethod("POST");
@@ -138,32 +135,34 @@ public class KakaoService {
     	
 	}
 	
-	public String kakaoLogout(String code) {
-		String reqURL = "https://kapi.kakao.com/v1/user/logout";
+	public String kakaoLogout(String authorization_code) {
+		System.out.println("-=================");
+		final String reqURL = "https://kapi.kakao.com/v1/user/logout";
 		//엑세스토큰 받기
-		String access_Token = getAccessToken(code, "sign_out");
+		// final String access_Token = getAccessToken(authorization_code, "sign_out");
+		final String access_Token = authorization_code;
 		System.out.println(access_Token);
 		try {
-			URL url = new URL(reqURL);
+			final URL url = new URL(reqURL);
 			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
 			//POST 요청을 위해 기본값이 false인 setDoOutput을 true로
-			conn.setRequestMethod("POST");
 			conn.setDoOutput(true);
+			conn.setRequestMethod("POST");
 			//요청에 필요한 Header에 포함될 내용
 			conn.setRequestProperty("Authorization", "Bearer " + access_Token);
 			
 			//결과 코드가 200이라면 성공
 			int responseCode = conn.getResponseCode();
 			System.out.println(responseCode);
-			// 요청을 통해 얻은 JSON타입의 Response 메세지 읽어오기
+			// 요청을 통해 얻은 JSON타입의 Response 메시지 읽어오기
 			BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line = "";
 			String result = "";
-			System.out.println("response bdoy : " + result);
 
 			while ((line = br.readLine()) != null) {
 				result += line;
 			}
+			System.out.println("response bdoy : " + result);
 			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
