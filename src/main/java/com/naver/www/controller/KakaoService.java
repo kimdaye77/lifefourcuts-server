@@ -26,15 +26,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class KakaoService {
 
-	//ì¹´ì¹´ì˜¤ ë¡œê·¸ì¸ í”„ë¡œì„¸ìŠ¤ ì§„í–‰(ìµœì¢… ëª©í‘œëŠ” Firebase CustomToken ë°œí–‰)
+	//Ä«Ä«¿À ·Î±×ÀÎ ÇÁ·Î¼¼½º ÁøÇà(ÃÖÁ¾ ¸ñÇ¥´Â Firebase CustomToken ¹ßÇà)
 	public Map<String, Object> execKakaoLogin(String authorize_code) throws Exception {
 		Map<String, Object> result = new HashMap<String, Object>();
 
-		//1. ì—‘ì„¸ìŠ¤í† í° ë°›ê¸°
-		String accessToken = getAccessToken(authorize_code);
+		//1. ¿¢¼¼½ºÅäÅ« ¹Ş±â
+		String accessToken = getAccessToken(authorize_code, "sign_in");
 		System.out.println(accessToken);
 		result.put("accessToken", accessToken.toString());
-		//2. ì‚¬ìš©ì ì •ë³´ ì½ì–´ì˜¤ê¸°
+		//2. »ç¿ëÀÚ Á¤º¸ ÀĞ¾î¿À±â
 		Map<String, Object> userInfo = getUserInfo(accessToken);
 		result.put("userInfo", userInfo.toString());
 		System.out.println("=====");
@@ -56,7 +56,7 @@ public class KakaoService {
 		return result;
 	}
 
-	public String getAccessToken(String authorize_code) {
+	public String getAccessToken(String authorize_code, String stat) {
 		String access_Token = "";
 		String refresh_Token = "";
 		String reqURL = "https://kauth.kakao.com/oauth/token";
@@ -64,25 +64,25 @@ public class KakaoService {
 		try {
 			URL url = new URL(reqURL);
 			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			//POST ìš”ì²­ì„ ìœ„í•´ ê¸°ë³¸ê°’ì´ falseì¸ setDoOutputì„ trueë¡œ
-			conn.setRequestMethod("POST");
+			//POST ¿äÃ»À» À§ÇØ ±âº»°ªÀÌ falseÀÎ setDoOutputÀ» true·Î
 			conn.setDoOutput(true);
-			//POST ìš”ì²­ì— í•„ìš”ë¡œ ìš”êµ¬í•˜ëŠ” íŒŒë¼ë¯¸í„° ìŠ¤íŠ¸ë¦¼ì„ í†µí•´ ì „ì†¡
+			conn.setRequestMethod("POST");
+			//POST ¿äÃ»¿¡ ÇÊ¿ä·Î ¿ä±¸ÇÏ´Â ÆÄ¶ó¹ÌÅÍ ½ºÆ®¸²À» ÅëÇØ Àü¼Û
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(conn.getOutputStream()));
 			StringBuilder sb = new StringBuilder();
 			sb.append("grant_type=authorization_code");
-			sb.append("&client_id=148faed447a0971199aff197f0c37b49"); //ë³¸ì¸ì´ ë°œê¸‰ë°›ì€ key
-			//ì„¤ì • redirect_uriëŠ” ì¹´ì¹´ì˜¤ì— ë“±ë¡ëœ ê²½ë¡œë¥¼ ì‘ì„±í•˜ë©´ ëœë‹¤.
-			sb.append("&redirect_uri=http://192.168.56.1:8080/kakao/sign_in"); // ë³¸ì¸ì´ ì„¤ì •í•´ ë†“ì€ ê²½ë¡œ
+			sb.append("&client_id=148faed447a0971199aff197f0c37b49"); //º»ÀÎÀÌ ¹ß±Ş¹ŞÀº key
+			//¼³Á¤ redirect_uri´Â Ä«Ä«¿À¿¡ µî·ÏµÈ °æ·Î¸¦ ÀÛ¼ºÇÏ¸é µÈ´Ù.
+			sb.append("&redirect_uri=http://192.168.56.1:8080/kakao/"+stat); // º»ÀÎÀÌ ¼³Á¤ÇØ ³õÀº °æ·Î
 			sb.append("&code="+authorize_code);
 			bw.write(sb.toString());
 			bw.flush();
-			//ê²°ê³¼ ì½”ë“œê°€ 200ì´ë¼ë©´ ì„±ê³µ
+			//°á°ú ÄÚµå°¡ 200ÀÌ¶ó¸é ¼º°ø
 			int responseCode = conn.getResponseCode();
 			System.out.println(sb.toString());
 			System.out.println(conn.getResponseMessage());
 			System.out.println("responseCode : " + responseCode);
-			//ìš”ì²­ì„ í†µí•´ ì–»ì€ JSONíƒ€ì…ì˜ Response ë©”ì„¸ì§€ ì½ì–´ì˜¤ê¸°
+			//¿äÃ»À» ÅëÇØ ¾òÀº JSONÅ¸ÀÔÀÇ Response ¸Ş¼¼Áö ÀĞ¾î¿À±â
 			BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line = "";
 			String result = "";
@@ -91,7 +91,7 @@ public class KakaoService {
 				result+=line;
 			}
 			System.out.println("response body : " + result);
-			//gson ë¼ì´ë¸ŒëŸ¬ë¦¬ì— í¬í•¨ëœ í´ë˜ìŠ¤ë¡œ JSONíŒŒì‹± ê°ì²´ ìƒì„±
+			//gson ¶óÀÌºê·¯¸®¿¡ Æ÷ÇÔµÈ Å¬·¡½º·Î JSONÆÄ½Ì °´Ã¼ »ı¼º
 			JsonElement element = JsonParser.parseString(result);
 			access_Token = element.getAsJsonObject().get("access_token").getAsString();
 			refresh_Token = element.getAsJsonObject().get("refresh_token").getAsString();
@@ -103,14 +103,14 @@ public class KakaoService {
 		return access_Token;
 	}
 	public Map<String, Object> getUserInfo(String access_Token) {
-		//ìš”ì²­í•˜ëŠ” í´ë¼ì´ì–¸íŠ¸ë§ˆë‹¤ ê°€ì§„ ì •ë³´ê°€ ë‹¤ë¥¼ ìˆ˜ ìˆê¸°ì— HashMapíƒ€ì…ìœ¼ë¡œ ì„ ì–¸ 
+		//¿äÃ»ÇÏ´Â Å¬¶óÀÌ¾ğÆ®¸¶´Ù °¡Áø Á¤º¸°¡ ´Ù¸¦ ¼ö ÀÖ±â¿¡ HashMapÅ¸ÀÔÀ¸·Î ¼±¾ğ 
         Map<String, Object> userInfo = new HashMap<>(); 
         String reqURL = "https://kapi.kakao.com/v2/user/me"; 
         try { 
             URL url = new URL(reqURL); 
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection(); 
+            HttpURLConnection conn = (HttpURLConnection)url.openConnection(); 
             conn.setRequestMethod("GET"); 
-            //ìš”ì²­ì— í•„ìš”í•œ Headerì— í¬í•¨ë  ë‚´ìš© 
+            //¿äÃ»¿¡ ÇÊ¿äÇÑ Header¿¡ Æ÷ÇÔµÉ ³»¿ë 
             conn.setRequestProperty("Authorization", "Bearer " + access_Token); 
             int responseCode = conn.getResponseCode(); 
             System.out.println("responseCode : " + responseCode);
@@ -138,24 +138,24 @@ public class KakaoService {
     	
 	}
 	
-	public String kakaoLogout(String access_Token) {
-		System.out.println(access_Token);
+	public String kakaoLogout(String code) {
 		String reqURL = "https://kapi.kakao.com/v1/user/logout";
+		//¿¢¼¼½ºÅäÅ« ¹Ş±â
+		String access_Token = getAccessToken(code, "sign_out");
+		System.out.println(access_Token);
 		try {
 			URL url = new URL(reqURL);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			//POST ìš”ì²­ì„ ìœ„í•´ ê¸°ë³¸ê°’ì´ falseì¸ setDoOutputì„ trueë¡œ
+			HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+			//POST ¿äÃ»À» À§ÇØ ±âº»°ªÀÌ falseÀÎ setDoOutputÀ» true·Î
 			conn.setRequestMethod("POST");
 			conn.setDoOutput(true);
-			//ìš”ì²­ì— í•„ìš”í•œ Headerì— í¬í•¨ë  ë‚´ìš©
+			//¿äÃ»¿¡ ÇÊ¿äÇÑ Header¿¡ Æ÷ÇÔµÉ ³»¿ë
 			conn.setRequestProperty("Authorization", "Bearer " + access_Token);
-			System.out.println(conn.toString());
-			System.out.println(conn.getRequestProperties());
-			System.out.println(conn.getURL());
-			//ê²°ê³¼ ì½”ë“œê°€ 200ì´ë¼ë©´ ì„±ê³µ
+			
+			//°á°ú ÄÚµå°¡ 200ÀÌ¶ó¸é ¼º°ø
 			int responseCode = conn.getResponseCode();
 			System.out.println(responseCode);
-			// ìš”ì²­ì„ í†µí•´ ì–»ì€ JSONíƒ€ì…ì˜ Response ë©”ì„¸ì§€ ì½ì–´ì˜¤ê¸°
+			// ¿äÃ»À» ÅëÇØ ¾òÀº JSONÅ¸ÀÔÀÇ Response ¸Ş¼¼Áö ÀĞ¾î¿À±â
 			BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			String line = "";
 			String result = "";
@@ -171,7 +171,7 @@ public class KakaoService {
 		return access_Token;
 	}
 
-	//ê¸°ë³¸ ì ìœ¼ë¡œ ìœ íš¨ê¸°ê°„ì€ 1ì‹œê°„ ì´ë©° ìœ ì € ì •ë³´ë¥¼ ì´ìš©í•´ì„œ ìƒì„±í•  ìˆ˜ ìˆëŠ” ë°©ë²•ì´ ì–´ë ¤ê°œ ìˆìŒ.
+	//±âº» ÀûÀ¸·Î À¯È¿±â°£Àº 1½Ã°£ ÀÌ¸ç À¯Àú Á¤º¸¸¦ ÀÌ¿ëÇØ¼­ »ı¼ºÇÒ ¼ö ÀÖ´Â ¹æ¹ıÀÌ ¾î·Á°³ ÀÖÀ½.
 	public String createFirebaseCustomToken(Map<String,Object> userInfo) throws Exception {
 		UserRecord userRecord;
 		String uid = userInfo.get("id").toString();
@@ -179,13 +179,13 @@ public class KakaoService {
 		String displayName = userInfo.get("nickname").toString();
 		System.out.println(uid);
 
-		//1. ì‚¬ìš©ì ì •ë³´ë¡œ íŒŒì´ì–´ ë² ì´ìŠ¤ ìœ ì €ì •ë³´ update, ì‚¬ìš©ì ì •ë³´ê°€ ìˆë‹¤ë©´ userRecordì— ìœ ì € ì •ë³´ê°€ ë‹´ê¸´ë‹¤.
+		//1. »ç¿ëÀÚ Á¤º¸·Î ÆÄÀÌ¾î º£ÀÌ½º À¯ÀúÁ¤º¸ update, »ç¿ëÀÚ Á¤º¸°¡ ÀÖ´Ù¸é userRecord¿¡ À¯Àú Á¤º¸°¡ ´ã±ä´Ù.
 		try {
 			UpdateRequest request = new UpdateRequest(uid);
 			request.setEmail(email);
 			request.setDisplayName(displayName);
 			userRecord = FirebaseAuth.getInstance().updateUser(request);
-		//1-2. ì‚¬ìš©ì ì •ë³´ê°€ ì—†ë‹¤ë©´ > catch êµ¬ë¶„ì—ì„œ createUserë¡œ ì‚¬ìš©ìë¥¼ ìƒì„±í•œë‹¤.
+		//1-2. »ç¿ëÀÚ Á¤º¸°¡ ¾ø´Ù¸é > catch ±¸ºĞ¿¡¼­ createUser·Î »ç¿ëÀÚ¸¦ »ı¼ºÇÑ´Ù.
 		} catch (FirebaseAuthException e) {
 			CreateRequest createRequest = new CreateRequest();
 			createRequest.setUid(uid);
@@ -196,7 +196,7 @@ public class KakaoService {
 			userRecord = FirebaseAuth.getInstance().createUser(createRequest);
 		}
 
-		//2. ì „ë‹¬ë°›ì€ user ì •ë³´ë¡œ CustomTokenì„ ë°œí–‰í•œë‹¤.
+		//2. Àü´Ş¹ŞÀº user Á¤º¸·Î CustomTokenÀ» ¹ßÇàÇÑ´Ù.
 		return FirebaseAuth.getInstance().createCustomToken(userRecord.getUid());
 		}
 }
